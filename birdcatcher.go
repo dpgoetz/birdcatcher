@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/openstack/swift/go/hummingbird"
 )
@@ -30,7 +31,8 @@ func Lala() {
 }
 
 type BirdCatcher struct {
-	oring hummingbird.Ring
+	oring  hummingbird.Ring
+	logger hummingbird.SysLogLike
 }
 
 type ReconData struct {
@@ -57,7 +59,16 @@ func (bc *BirdCatcher) getReconDataForHost(hostPort string, dataChan chan *Recon
 	serverUrl := fmt.Sprintf("http://%s/recon/unmounted", hostPort)
 
 	fmt.Println(serverUrl)
-	resp, err := http.Get(serverUrl)
+	client := http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest("GET", serverUrl, nil)
+	if err != nil {
+		fmt.Println("222: ", err)
+		return
+	}
+	bc.logger.Info("lalalala qqqqqqqqqqqqqq")
+	bc.logger.Err("lalalala rrrrrrrrrrrrrr")
+	fmt.Println("777777777777777777777777777777777")
+	resp, err := client.Do(req)
 	if err != nil {
 		//errs = append(errs, err)
 		//serverToDev[serverUrl] = nil
@@ -143,6 +154,7 @@ func GetBirdCatcher() (*BirdCatcher, error) {
 	}
 	bc := BirdCatcher{}
 	bc.oring = objRing
+	bc.logger = hummingbird.SetupLogger("LOG_LOCAL2", "birdcatcher", "") // fix at some point
 	return &bc, nil
 
 }
