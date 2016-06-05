@@ -30,6 +30,15 @@ func main() {
 
 	bc, _ := birdcatcher.GetBirdCatcher()
 	fmt.Println("the ring: ", bc.AllDevs())
-	bc.GatherReconData()
+	reconData, reconErrs := bc.GatherReconData()
+	fmt.Println("12345: ", reconData[0].Device, reconData[0].Mounted)
+	fmt.Println("12345: ", reconErrs)
+
+	fmt.Println("is it 4: ", len(reconData))
+
+	for _, val := range reconData {
+		fmt.Println("reconDev: ", val.Device)
+
+	}
 
 }
