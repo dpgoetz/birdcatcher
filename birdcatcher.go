@@ -26,10 +26,6 @@ import (
 	"github.com/openstack/swift/go/hummingbird"
 )
 
-func Lala() {
-	fmt.Println("lalala")
-}
-
 type BirdCatcher struct {
 	oring  hummingbird.Ring
 	logger hummingbird.SysLogLike
@@ -42,18 +38,16 @@ type ReconData struct {
 	dev      hummingbird.Device
 }
 
+/*
 func (bc *BirdCatcher) AllDevs() (devs []hummingbird.Device) {
 	return bc.oring.AllDevices()
 }
+*/
 
-type reconByteData struct {
-	HostnameDevice string
-	Data           []byte
-}
-
-func (bc *BirdCatcher) getReconDataForHost(hostPort string, dataChan chan *ReconData, doneChan chan bool) {
+func (bc *BirdCatcher) reconGetUnmounted(hostPort string, dataChan chan *ReconData, doneChan chan bool) {
 	// TODO: log the errs
 	defer func() {
+		fmt.Println("mnmnmnmnm")
 		doneChan <- true
 	}()
 	serverUrl := fmt.Sprintf("http://%s/recon/unmounted", hostPort)
@@ -62,7 +56,7 @@ func (bc *BirdCatcher) getReconDataForHost(hostPort string, dataChan chan *Recon
 	client := http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest("GET", serverUrl, nil)
 	if err != nil {
-		fmt.Println("222: ", err)
+		bc.logger.Err(fmt.Sprintf("Could not create request to %s: %v", serverUrl, err))
 		return
 	}
 	bc.logger.Info("lalalala qqqqqqqqqqqqqq")
@@ -73,17 +67,20 @@ func (bc *BirdCatcher) getReconDataForHost(hostPort string, dataChan chan *Recon
 		//errs = append(errs, err)
 		//serverToDev[serverUrl] = nil
 		fmt.Println("333: ", err)
+		bc.logger.Err(fmt.Sprintf("Could not do request to %s: %v", serverUrl, err))
 		return
 	}
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		//errs = append(errs, err)
 		fmt.Println("444", err)
+		bc.logger.Err(fmt.Sprintf("Could not read resp to %s: %v", serverUrl, err))
 		return
 	}
 	var serverReconData []*ReconData
 	if err := json.Unmarshal(data, &serverReconData); err != nil {
 		//errs = append(errs, err)
+		bc.logger.Err(fmt.Sprintf("Could not parse json from %s: %v", serverUrl, err))
 		fmt.Println("555", err)
 		return
 	}
@@ -117,7 +114,7 @@ func (bc *BirdCatcher) GatherReconData() (devs []*ReconData, errs []error) {
 	doneChan := make(chan bool)
 
 	for hostPort, _ := range allServers {
-		go bc.getReconDataForHost(hostPort, dataChan, doneChan)
+		go bc.reconGetUnmounted(hostPort, dataChan, doneChan)
 		serverCount += 1
 	}
 
@@ -152,9 +149,9 @@ func GetBirdCatcher() (*BirdCatcher, error) {
 		fmt.Println("Unable to load ring:", err)
 		return nil, err
 	}
-	bc := BirdCatcher{}
+	bc := &BirdCatcher{}
 	bc.oring = objRing
 	bc.logger = hummingbird.SetupLogger("LOG_LOCAL2", "birdcatcher", "") // fix at some point
-	return &bc, nil
+	return bc, nil
 
 }

@@ -26,10 +26,9 @@ var Version = "0.1"
 
 func main() {
 	fmt.Println("hello")
-	birdcatcher.Lala()
 
 	bc, _ := birdcatcher.GetBirdCatcher()
-	fmt.Println("the ring: ", bc.AllDevs())
+	//	fmt.Println("the ring: ", bc.AllDevs())
 	reconData, reconErrs := bc.GatherReconData()
 	fmt.Println("12345: ", reconData[0].Device, reconData[0].Mounted)
 	fmt.Println("12345: ", reconErrs)
